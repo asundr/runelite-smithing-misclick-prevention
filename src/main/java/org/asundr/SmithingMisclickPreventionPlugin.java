@@ -39,7 +39,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Smithing Misclick Prevention",
+	name = "Smithing MisClick Prevention",
 	description = "Prevents accidentally clicking on unintended items in the smithing menu",
 	tags = {"smith", "click", "mistake", "hide", "items", "menu"},
 	enabledByDefault = true
