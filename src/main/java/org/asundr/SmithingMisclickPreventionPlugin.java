@@ -27,12 +27,14 @@ package org.asundr;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.Notifier;
 
 @Slf4j
 @PluginDescriptor(
@@ -49,13 +51,15 @@ public class SmithingMisclickPreventionPlugin extends Plugin
 	private SmithingMisclickPreventionConfig config;
 	@Inject
 	private EventBus eventBus;
+	@Inject
+	private Notifier notifier;
 
 	private SmithingMenuManager smithingMenuManager;
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		smithingMenuManager = new SmithingMenuManager(client, config);
+		smithingMenuManager = new SmithingMenuManager(client, config, notifier);
 		eventBus.register(smithingMenuManager);
 	}
 

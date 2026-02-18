@@ -33,11 +33,19 @@ import net.runelite.client.config.ConfigSection;
 @ConfigGroup("SmithingMisclickPrevention")
 public interface SmithingMisclickPreventionConfig extends Config
 {
-	@ConfigSection( name = "Presets", description = "Enabling any of forces right-clicking", position = 0 )
+	@ConfigSection( name = "General", description = "General settings", position = 0 )
+	String SECTION_GENERAL = "general";
+
+	@ConfigSection( name = "Presets", description = "Enabling any of forces right-clicking", position = 1 )
 	String SECTION_PRESETS = "presets";
 
-	@ConfigSection( name = "Advanced", description = "Additional configuration", position = 1 )
+	@ConfigSection( name = "Advanced", description = "Additional configuration", position = 1000 )
 	String SECTION_ADVANCED = "advanced";
+
+	///////
+
+	@ConfigItem( keyName = "notifyMisclick", name = "Notify on misclick", description = "If enabled, sends a notification on a misclick.", section = SECTION_GENERAL)
+	default boolean notifyMisclick() { return true; }
 
 	@ConfigItem( keyName = "twoHSword", name = "2h sword", description = "", section = SECTION_PRESETS)
 	default boolean twoHSword() { return false; }
