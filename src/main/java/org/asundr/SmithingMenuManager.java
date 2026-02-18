@@ -28,12 +28,15 @@ package org.asundr;
 import net.runelite.api.Client;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.MenuShouldLeftClick;
 import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.Notifier;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -99,16 +102,18 @@ public class SmithingMenuManager
 
     private static Client client;
     private static SmithingMisclickPreventionConfig config;
+    private static Notifier notifier;
 
     private boolean forceRightClick = false;
     private boolean smithingMenuOpen = false;
     private final HashSet<String> enabledUniques = new HashSet<>(), enabledPrefixed = new HashSet<>();
 
 
-    SmithingMenuManager(Client client, SmithingMisclickPreventionConfig config)
+    SmithingMenuManager(Client client, SmithingMisclickPreventionConfig config, Notifier notifier)
     {
         SmithingMenuManager.client = client;
         SmithingMenuManager.config = config;
+        SmithingMenuManager.notifier = notifier;
         updateEnabled();
     }
 
@@ -166,6 +171,16 @@ public class SmithingMenuManager
         {
             smithingMenuOpen = false;
         }
+    }
+
+    @Subscribe
+    private void onMenuOptionClicked(MenuOptionClicked event)
+    {
+        if (!config.notifyMisclick() || !isOptionEnabled(event.getMenuOption()) || !isTargetEnabled(event.getMenuTarget()))
+        {
+            return;
+        }
+        notifier.notify(String.format("Misclick on: %s!", CommonUtils.sanitizeTradeMenuTarget(event.getMenuTarget()), TrayIcon.MessageType.WARNING));
     }
 
     private static Pattern constructPattern()
