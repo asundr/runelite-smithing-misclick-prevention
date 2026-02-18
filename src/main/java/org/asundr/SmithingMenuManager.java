@@ -208,9 +208,12 @@ public class SmithingMenuManager
         {
             return;
         }
-        final String targetName = CommonUtils.sanitizeTradeMenuTarget(event.getMenuTarget());
-        notifier.notify(String.format(TEMPLATE_NOTIFY_WARNING, targetName), TrayIcon.MessageType.WARNING);
-        warningOverlay.setWarningName(targetName);
+        if (!CommonUtils.sanitizeTags(event.getMenuTarget()).endsWith("(Members)"))
+        {
+            final String targetName = CommonUtils.sanitizeTradeMenuTarget(event.getMenuTarget());
+            notifier.notify(String.format(TEMPLATE_NOTIFY_WARNING, targetName), TrayIcon.MessageType.WARNING);
+            warningOverlay.setWarningName(targetName);
+        }
     }
 
     @Subscribe
