@@ -30,11 +30,14 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 
+import java.awt.*;
+
 @ConfigGroup("SmithingMisclickPrevention")
 public interface SmithingMisclickPreventionConfig extends Config
 {
 	String GROUP_NAME = "SmithingMisclickPrevention";
 	String KEY_SHOW_MISCLICK_OVERLAY = "showMisclickOverlay";
+	String KEY_OVERLAY_BACKGROUND_COLOR = "misclickOverlayColorBackground";
 
 	@ConfigSection( name = "General", description = "General settings", position = 0 )
 	String SECTION_GENERAL = "general";
@@ -47,10 +50,14 @@ public interface SmithingMisclickPreventionConfig extends Config
 
 	///////
 
-	@ConfigItem( keyName = "notifyMisclick", name = "Notify on misclick", description = "If enabled, sends a notification on a misclick.", section = SECTION_GENERAL)
+	@ConfigItem( keyName = "notifyMisclick", name = "Enable notify on misclick", description = "Sends a notification if misclick prevention is bypassed. ", section = SECTION_GENERAL)
 	default boolean notifyMisclick() { return true; }
-	@ConfigItem( keyName = KEY_SHOW_MISCLICK_OVERLAY, name = "Overlay on misclick", description = "If enabled, displays a warning overlay on a misclick.", section = SECTION_GENERAL)
+	@ConfigItem( keyName = KEY_SHOW_MISCLICK_OVERLAY, name = "Enable overlay on misclick", description = "Displays a warning overlay if misclick prevention is bypassed.", section = SECTION_GENERAL)
 	default boolean showMisclickOverlay() { return true; }
+	@ConfigItem( keyName = "misclickOverlayColorText", name = "Overlay text color", description = "Text color of the warning overlay for a misclick.", section = SECTION_GENERAL)
+	default Color misclickOverlayColorText() { return Color.WHITE; }
+	@ConfigItem( keyName = KEY_OVERLAY_BACKGROUND_COLOR, name = "Overlay panel color", description = "Background color of the warning overlay for a misclick.", section = SECTION_GENERAL)
+	default Color misclickOverlayColorBackground() { return Color.RED; }
 
 	@ConfigItem( keyName = "twoHSword", name = "2h sword", description = "", section = SECTION_PRESETS)
 	default boolean twoHSword() { return false; }
