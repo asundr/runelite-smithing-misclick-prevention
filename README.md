@@ -4,6 +4,8 @@ This RuneLite plugin allows users to configure select items in the smithing menu
 
 The settings can be applied to as many or few items in the smithing menu.
 
+Can enable a warning notification and/or overlay via the config menu. 
+
 ![image](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/installs/plugin/smithing-misclick-prevention)
 ![image](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/rank/plugin/smithing-misclick-prevention)
 
