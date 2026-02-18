@@ -35,6 +35,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.Notifier;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 @Slf4j
 @PluginDescriptor(
@@ -53,20 +54,21 @@ public class SmithingMisclickPreventionPlugin extends Plugin
 	private EventBus eventBus;
 	@Inject
 	private Notifier notifier;
+	@Inject
+	private OverlayManager overlayManager;
 
 	private SmithingMenuManager smithingMenuManager;
 
 	@Override
 	protected void startUp() throws Exception
 	{
-		smithingMenuManager = new SmithingMenuManager(client, config, notifier);
-		eventBus.register(smithingMenuManager);
+		smithingMenuManager = new SmithingMenuManager(client, config, notifier, eventBus, overlayManager);
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
-		eventBus.unregister(smithingMenuManager);
+		smithingMenuManager.shutdown(eventBus, overlayManager);
 	}
 
 

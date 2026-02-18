@@ -25,8 +25,14 @@
 
 package org.asundr;
 
+import net.runelite.api.gameval.AnimationID;
+import net.runelite.api.events.AnimationChanged;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.Player;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.MenuShouldLeftClick;
@@ -34,9 +40,12 @@ import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.Notifier;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -93,28 +102,46 @@ public class SmithingMenuManager
         UniqueItems(String text, Supplier<Boolean> query) { this.text = text; this.query = query; }
     }
 
+    private static final int SMITHING_TIMEOUT_MS = 4500;
     private static final int SMITHING_MENU_ID = 312;
+    private static final String TEMPLATE_NOTIFY_WARNING = "Misclick on: %s!";
     private static final String OPTION_SMITH = "Smith";
     private static final String OPTION_SMITH_SET = "Smith set";
     private static final ArrayList<String> MATERIALS = new ArrayList<>(Arrays.asList("Bronze", "Iron", "Steel", "Gold", "Mithril", "Adamant(?:ite)?", "Rune"));
     private static final Pattern PREFIXED_PATTERN = constructPattern();
 
 
-    private static Client client;
     private static SmithingMisclickPreventionConfig config;
+    private static Client client;
     private static Notifier notifier;
+
+    private final WarningOverlay warningOverlay;
 
     private boolean forceRightClick = false;
     private boolean smithingMenuOpen = false;
+    private boolean currentlySmithing = false;
+    private Instant lastSmithTime = null;
     private final HashSet<String> enabledUniques = new HashSet<>(), enabledPrefixed = new HashSet<>();
 
 
-    SmithingMenuManager(Client client, SmithingMisclickPreventionConfig config, Notifier notifier)
+    SmithingMenuManager(Client client, SmithingMisclickPreventionConfig config, Notifier notifier, EventBus eventBus, OverlayManager overlayManager)
     {
         SmithingMenuManager.client = client;
         SmithingMenuManager.config = config;
         SmithingMenuManager.notifier = notifier;
+
+        warningOverlay = new WarningOverlay(config, client);
+        eventBus.register(warningOverlay);
+        eventBus.register(this);
+        overlayManager.add(warningOverlay);
         updateEnabled();
+    }
+
+    void shutdown(EventBus eventBus, OverlayManager overlayManager)
+    {
+        overlayManager.remove(warningOverlay);
+        eventBus.unregister(warningOverlay);
+        eventBus.unregister(this);
     }
 
     @Subscribe
@@ -161,6 +188,7 @@ public class SmithingMenuManager
         if (evt.getGroupId() == SMITHING_MENU_ID)
         {
             smithingMenuOpen = true;
+            setCurrentlySmithing(false);
         }
     }
 
@@ -180,8 +208,68 @@ public class SmithingMenuManager
         {
             return;
         }
-        notifier.notify(String.format("Misclick on: %s!", CommonUtils.sanitizeTradeMenuTarget(event.getMenuTarget()), TrayIcon.MessageType.WARNING));
+        final String targetName = CommonUtils.sanitizeTradeMenuTarget(event.getMenuTarget());
+        notifier.notify(String.format(TEMPLATE_NOTIFY_WARNING, targetName), TrayIcon.MessageType.WARNING);
+        warningOverlay.setWarningName(targetName);
     }
+
+    @Subscribe
+    private void onGameTick(GameTick event)
+    {
+        if (lastSmithTime != null && currentlySmithing && (Instant.now().toEpochMilli() - lastSmithTime.toEpochMilli() > SMITHING_TIMEOUT_MS))
+        {
+            setCurrentlySmithing(false);
+        }
+    }
+
+    @Subscribe
+    private void onAnimationChanged(AnimationChanged event)
+    {
+        final Player player = client.getLocalPlayer();
+        if (player != event.getActor())
+        {
+            return;
+        }
+        switch(player.getAnimation())
+        {
+            case AnimationID.HUMAN_SMITHING:
+            case AnimationID.HUMAN_SMITHING_IMCANDO_HAMMER:
+                setCurrentlySmithing(true);
+                lastSmithTime = Instant.now();
+                break;
+            case -1:
+                break;
+            default:
+                setCurrentlySmithing(false);
+                return;
+        }
+    }
+    @Subscribe
+    public void onGameStateChanged(GameStateChanged event)
+    {
+        switch (event.getGameState())
+        {
+            case LOGIN_SCREEN: case HOPPING:
+                setCurrentlySmithing(false);
+                break;
+        }
+    }
+
+
+    void setCurrentlySmithing(boolean isSmithing)
+    {
+        if (currentlySmithing == isSmithing)
+        {
+            return;
+        }
+        if (!isSmithing)
+        {
+            lastSmithTime = null;
+            warningOverlay.clearWarningName();
+        }
+        currentlySmithing = isSmithing;
+    }
+
 
     private static Pattern constructPattern()
     {
